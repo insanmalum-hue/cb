@@ -1,0 +1,358 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                      🔐 CRYPTO CHATBOT GÖRSEL REHBERİ                       ║
+║                         Visual Guide & ASCII Art                            ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+
+═══════════════════════════════════════════════════════════════════════════════
+📱 KULLANIM AKIŞI (USER FLOW)
+═══════════════════════════════════════════════════════════════════════════════
+
+    ┌─────────────┐
+    │   BAŞLAT    │
+    │  python     │
+    │  app.py     │
+    └──────┬──────┘
+           │
+           ▼
+    ┌─────────────────────────────────────┐
+    │  Flask Server Başlatıldı           │
+    │  http://localhost:5000              │
+    └──────┬──────────────────────┬───────┘
+           │                      │
+           ▼                      ▼
+    ┌──────────────┐      ┌──────────────┐
+    │ CHAT ARAYÜZÜ │      │ ADMIN PANEL  │
+    │    /         │      │   /admin     │
+    └──────┬───────┘      └──────┬───────┘
+           │                     │
+           ▼                     ▼
+    [Kullanıcı Akışı]     [Yönetici Akışı]
+
+
+═══════════════════════════════════════════════════════════════════════════════
+💬 CHAT INTERFACE MOCKUP
+═══════════════════════════════════════════════════════════════════════════════
+
+╔════════════════════════════════════════════════════════════════════════════╗
+║                          🔐 Crypto Chatbot                                 ║
+║ ┌────────────────────────────────────────────────────────────────────────┐ ║
+║ │ ███████████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░  36%                  │ ║
+║ │                        Message 13/36                                   │ ║
+║ └────────────────────────────────────────────────────────────────────────┘ ║
+║                                                                            ║
+║  ╭────────────────────────────────────────────────╮                       ║
+║  │ Welcome! Chat with me naturally. I'll help    │                       ║
+║  │ you discover something special after 36       │                       ║
+║  │ messages.                                      │                       ║
+║  ╰────────────────────────────────────────────────╯                       ║
+║                                                                            ║
+║                      ╭─────────────────────────────────────────╮          ║
+║                      │ Hello, how are you today?               │          ║
+║                      ╰─────────────────────────────────────────╯          ║
+║                                                                            ║
+║  ╭────────────────────────────────────────────────╮                       ║
+║  │ I'm doing great! As a pilot, I've always      │                       ║
+║  │ enjoyed helping people navigate new           │  [Kelime: pilot]      ║
+║  │ experiences.                                   │                       ║
+║  ╰────────────────────────────────────────────────╯                       ║
+║                                                                            ║
+║                      ╭─────────────────────────────────────────╮          ║
+║                      │ Tell me about technology...             │          ║
+║                      ╰─────────────────────────────────────────╯          ║
+║                                                                            ║
+║  ╭────────────────────────────────────────────────╮                       ║
+║  │ Technology has made giant leaps forward in    │                       ║
+║  │ recent years, transforming how we             │  [Kelime: giant]      ║
+║  │ communicate and work.                          │                       ║
+║  ╰────────────────────────────────────────────────╯                       ║
+║                                                                            ║
+║  ● ● ●  [Bot yazıyor...]                                                  ║
+║                                                                            ║
+║ ┌────────────────────────────────────────────────────────────────────────┐ ║
+║ │ Chat naturally to progress through the sequence...                     │ ║
+║ │ ┌──────────────────────────────────────────────────────┐ ┌──────────┐ │ ║
+║ │ │ Type your message...                                 │ │   Send   │ │ ║
+║ │ └──────────────────────────────────────────────────────┘ └──────────┘ │ ║
+║ └────────────────────────────────────────────────────────────────────────┘ ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+
+═══════════════════════════════════════════════════════════════════════════════
+🎛️  ADMIN PANEL MOCKUP
+═══════════════════════════════════════════════════════════════════════════════
+
+╔════════════════════════════════════════════════════════════════════════════╗
+║                           🔐 Admin Panel                                   ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+┌──────────────────────┐  ┌──────────────────────┐  ┌──────────────────────┐
+│      👥              │  │       ⚡             │  │       ✅             │
+│ Total Sessions       │  │  Active Sessions     │  │ Completed Sequences  │
+│                      │  │                      │  │                      │
+│        42            │  │         15           │  │          8           │
+└──────────────────────┘  └──────────────────────┘  └──────────────────────┘
+
+╔════════════════════════════════════════════════════════════════════════════╗
+║  Python Code Configuration                                                 ║
+║                                                                            ║
+║  This Python code will be displayed to users after they complete all 36   ║
+║  messages. You can edit it below and save your changes.                   ║
+║                                                                            ║
+║  Last updated: 2025-10-24 21:47:30                                        ║
+║                                                                            ║
+║ ┌────────────────────────────────────────────────────────────────────────┐ ║
+║ │ from cryptography.fernet import Fernet                                 │ ║
+║ │                                                                        │ ║
+║ │ # Generate encryption key                                             │ ║
+║ │ key = Fernet.generate_key()                                           │ ║
+║ │ cipher = Fernet(key)                                                  │ ║
+║ │                                                                        │ ║
+║ │ # Encrypt message                                                     │ ║
+║ │ message = b"Your seed phrase words: pilot giant enable..."           │ ║
+║ │ encrypted = cipher.encrypt(message)                                   │ ║
+║ │                                                                        │ ║
+║ │ print(f"Encrypted: {encrypted}")                                      │ ║
+║ │ print(f"Key: {key}")                                                  │ ║
+║ │                                                                        │ ║
+║ └────────────────────────────────────────────────────────────────────────┘ ║
+║                                                                            ║
+║  ┌────────────┐  ┌───────────┐                                            ║
+║  │ 💾 Save Code│  │ 🔄 Reload │                                            ║
+║  └────────────┘  └───────────┘                                            ║
+║                                                                            ║
+║  ✓ Code saved successfully!                                               ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+
+═══════════════════════════════════════════════════════════════════════════════
+📊 36 MESAJ ÖRNEĞİ (Message Example Flow)
+═══════════════════════════════════════════════════════════════════════════════
+
+Message  User Input               Bot Response (Contains Word)      Progress
+─────────────────────────────────────────────────────────────────────────────
+   1     "Hello!"                 "...as a pilot, I enjoy..."         [█░░░░] 3%
+   2     "How are you?"           "...made giant leaps..."            [██░░░] 6%
+   3     "Tell me more"           "...enable new features..."         [███░░] 8%
+   4     "Interesting!"           "...sweet as syrup..."              [████░] 11%
+   5     "What about tech?"       "...deserve a medal for..."         [█████] 14%
+   ...
+   13    "Amazing!"               "...grid systems work..."           [██████████████░░░░░░] 36%
+   ...
+   24    "Keep going"             "...need to find solutions..."      [████████████████████] 67%
+   ...
+   35    "Almost there!"          "...prevent crime effectively..."   [███████████████████] 97%
+   36    "Last one!"              "...like a bird in flight..."       [████████████████████] 100%
+
+   37    "show code"              🎉 Congratulations! Here's your Python code...
+
+═══════════════════════════════════════════════════════════════════════════════
+🎯 KOD TESLİMİ GÖSTERİMİ (Code Delivery Display)
+═══════════════════════════════════════════════════════════════════════════════
+
+╔════════════════════════════════════════════════════════════════════════════╗
+║  ╭────────────────────────────────────────────────╮                       ║
+║  │ Congratulations! You've sent 36 messages.     │                       ║
+║  │ Here's your Python code:                       │                       ║
+║  │                                                 │                       ║
+║  │ ```python                                       │                       ║
+║  │ # Your Seed Phrase Words (in order):           │                       ║
+║  │ words = [                                       │                       ║
+║  │     "pilot", "giant", "enable", "syrup",       │                       ║
+║  │     "medal", "hero", "iron", "soap",           │                       ║
+║  │     "visual", "vendor", "genuine", "punch",    │                       ║
+║  │     "grid", "floor", "glide", "penalty",       │                       ║
+║  │     "blossom", "crew", "pival", "sheriff",     │                       ║
+║  │     "solar", "claw", "oak", "find",            │                       ║
+║  │     "bind", "pet", "urban", "else",            │                       ║
+║  │     "series", "wave", "pumpkin", "amount",     │                       ║
+║  │     "verb", "similar", "crime", "bird"         │                       ║
+║  │ ]                                               │                       ║
+║  │                                                 │                       ║
+║  │ seed_phrase = " ".join(words)                  │                       ║
+║  │ print(f"Your seed: {seed_phrase}")             │                       ║
+║  │ ```                                             │                       ║
+║  │                                                 │                       ║
+║  │ Thank you for chatting with me!                │                       ║
+║  ╰────────────────────────────────────────────────╯                       ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+
+═══════════════════════════════════════════════════════════════════════════════
+🔄 SİSTEM AKIŞI DİYAGRAMI (System Flow Diagram)
+═══════════════════════════════════════════════════════════════════════════════
+
+                               ┌─────────────────┐
+                               │  User Browser   │
+                               └────────┬────────┘
+                                        │
+                    ┌───────────────────┼───────────────────┐
+                    │                   │                   │
+                    ▼                   ▼                   ▼
+            ┌──────────────┐    ┌──────────────┐   ┌──────────────┐
+            │  chat.html   │    │  admin.html  │   │   chat.js    │
+            │  (Template)  │    │  (Template)  │   │ (JavaScript) │
+            └──────┬───────┘    └──────┬───────┘   └──────┬───────┘
+                   │                   │                   │
+                   └───────────────────┼───────────────────┘
+                                       │
+                                       ▼
+                            ┌────────────────────┐
+                            │   Flask Routes     │
+                            │   (app.py)         │
+                            └──────┬─────────────┘
+                                   │
+                    ┌──────────────┼──────────────┐
+                    │              │              │
+                    ▼              ▼              ▼
+            ┌──────────────┐ ┌──────────┐ ┌─────────────┐
+            │ ChatbotEngine│ │ Database │ │   Session   │
+            │ (chatbot.py) │ │(SQLAlchemy)│ │ Management  │
+            └──────┬───────┘ └─────┬────┘ └──────┬──────┘
+                   │               │              │
+                   │               │              │
+                   ▼               ▼              ▼
+            ┌──────────────┐ ┌──────────┐ ┌─────────────┐
+            │   OpenAI     │ │ SQLite   │ │localStorage │
+            │  (optional)  │ │   DB     │ │  (Browser)  │
+            └──────────────┘ └──────────┘ └─────────────┘
+
+
+═══════════════════════════════════════════════════════════════════════════════
+📈 PROGRESS BAR ANİMASYONU (Progress Bar Animation)
+═══════════════════════════════════════════════════════════════════════════════
+
+Mesaj 0/36:   [░░░░░░░░░░░░░░░░░░░░] 0%
+Mesaj 5/36:   [███░░░░░░░░░░░░░░░░░] 14%
+Mesaj 10/36:  [██████░░░░░░░░░░░░░░] 28%
+Mesaj 15/36:  [████████░░░░░░░░░░░░] 42%
+Mesaj 20/36:  [███████████░░░░░░░░░] 56%
+Mesaj 25/36:  [██████████████░░░░░░] 69%
+Mesaj 30/36:  [████████████████░░░░] 83%
+Mesaj 35/36:  [███████████████████░] 97%
+Mesaj 36/36:  [████████████████████] 100% ✓
+
+
+═══════════════════════════════════════════════════════════════════════════════
+🎨 36 KELİME LİSTESİ (The 36 Words)
+═══════════════════════════════════════════════════════════════════════════════
+
+╔═══════╦═══════════╦═══════╦═══════════╦═══════╦═══════════╦═══════╦═══════════╗
+║   #   ║   Word    ║   #   ║   Word    ║   #   ║   Word    ║   #   ║   Word    ║
+╠═══════╬═══════════╬═══════╬═══════════╬═══════╬═══════════╬═══════╬═══════════╣
+║   1   ║  pilot    ║  10   ║  vendor   ║  19   ║  pival    ║  28   ║  else     ║
+║   2   ║  giant    ║  11   ║  genuine  ║  20   ║  sheriff  ║  29   ║  series   ║
+║   3   ║  enable   ║  12   ║  punch    ║  21   ║  solar    ║  30   ║  wave     ║
+║   4   ║  syrup    ║  13   ║  grid     ║  22   ║  claw     ║  31   ║  pumpkin  ║
+║   5   ║  medal    ║  14   ║  floor    ║  23   ║  oak      ║  32   ║  amount   ║
+║   6   ║  hero     ║  15   ║  glide    ║  24   ║  find     ║  33   ║  verb     ║
+║   7   ║  iron     ║  16   ║  penalty  ║  25   ║  bind     ║  34   ║  similar  ║
+║   8   ║  soap     ║  17   ║  blossom  ║  26   ║  pet      ║  35   ║  crime    ║
+║   9   ║  visual   ║  18   ║  crew     ║  27   ║  urban    ║  36   ║  bird     ║
+╚═══════╩═══════════╩═══════╩═══════════╩═══════╩═══════════╩═══════╩═══════════╝
+
+
+═══════════════════════════════════════════════════════════════════════════════
+💡 KULLANIM İPUÇLARI (Usage Tips)
+═══════════════════════════════════════════════════════════════════════════════
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  KULLANICILAR İÇİN:                                                        │
+│  ✓ Doğal bir şekilde sohbet edin                                          │
+│  ✓ Her mesajda progress bar'ı izleyin                                     │
+│  ✓ Bot'un cevaplarındaki kelimelere dikkat edin                           │
+│  ✓ 36 mesaj sonrası "show code" yazın                                     │
+│  ✓ Session'ınız localStorage'de saklanır                                  │
+│                                                                             │
+│  YÖNETİCİLER İÇİN:                                                         │
+│  ✓ /admin adresinden panele erişin                                        │
+│  ✓ İstatistikleri gerçek zamanlı izleyin                                  │
+│  ✓ Python kodunu özelleştirin                                             │
+│  ✓ Her 15 saniyede stats otomatik yenilenir                               │
+│  ✓ Kod değişikliklerini Save butonu ile kaydedin                          │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+
+═══════════════════════════════════════════════════════════════════════════════
+🚀 HIZLI BAŞLATMA KOMUTLARI
+═══════════════════════════════════════════════════════════════════════════════
+
+$ pip install -r requirements.txt        # Bağımlılıkları yükle
+$ python test_system.py                  # Testleri çalıştır
+$ python app.py                          # Uygulamayı başlat
+$ firefox http://localhost:5000/         # Chat arayüzü
+$ firefox http://localhost:5000/admin    # Admin panel
+
+
+═══════════════════════════════════════════════════════════════════════════════
+📁 PROJE YAPISININ GÖRSELİ
+═══════════════════════════════════════════════════════════════════════════════
+
+crypto_chatbot/
+│
+├── 📄 app.py                  ← Flask application (routes)
+├── 📄 chatbot.py              ← ChatbotEngine (AI logic)
+├── 📄 database.py             ← SQLAlchemy models
+│
+├── 📋 requirements.txt        ← Dependencies
+├── 🔐 .env                    ← Environment config
+├── 🚫 .gitignore              ← Git ignore rules
+│
+├── 📖 README.md               ← English documentation
+├── 📖 BAŞLANGIÇ.md            ← Turkish quick start
+├── 🧪 test_system.py          ← Test suite
+├── 💻 ÖRNEK_KODLAR.py         ← Crypto examples
+├── 🎨 GÖRSEL_REHBERİ.txt      ← This file!
+│
+├── 📁 templates/
+│   ├── chat.html              ← Chat interface
+│   └── admin.html             ← Admin panel
+│
+└── 📁 static/
+    └── chat.js                ← Client JavaScript
+
+
+═══════════════════════════════════════════════════════════════════════════════
+🎯 TEST SONUÇLARI (Test Results Summary)
+═══════════════════════════════════════════════════════════════════════════════
+
+┌───────────────────────────────────────┬──────────┬─────────────────────────┐
+│ Test Name                             │  Status  │  Details                │
+├───────────────────────────────────────┼──────────┼─────────────────────────┤
+│ Word List Validation                  │ ✅ PASS  │ 36 unique lowercase     │
+│ ChatbotEngine Initialization          │ ✅ PASS  │ All attributes present  │
+│ Code Request Detection                │ ✅ PASS  │ 15/15 patterns work     │
+│ Target Word Retrieval                 │ ✅ PASS  │ Correct word mapping    │
+│ Fallback Response Generation          │ ✅ PASS  │ Words embedded properly │
+│ Code Response Formatting              │ ✅ PASS  │ Markdown formatted      │
+└───────────────────────────────────────┴──────────┴─────────────────────────┘
+
+                         Total: 6/6 Tests Passed (100%)
+
+
+═══════════════════════════════════════════════════════════════════════════════
+🎊 PROJE DURUMU (Project Status)
+═══════════════════════════════════════════════════════════════════════════════
+
+    ✅ Backend Tamamlandı       (app.py, chatbot.py, database.py)
+    ✅ Frontend Tamamlandı      (HTML, CSS, JavaScript)
+    ✅ Testler Başarılı        (6/6 tests passed - 100%)
+    ✅ Dokümantasyon Hazır     (README, BAŞLANGIÇ, GÖRSEL_REHBERİ)
+    ✅ Örnekler Eklendi        (ÖRNEK_KODLAR.py - 8 examples)
+    ✅ Git Commits Tamamlandı  (10 commits pushed)
+
+    🚀 Proje Kullanıma Hazır!
+
+
+═══════════════════════════════════════════════════════════════════════════════
+                          🎉 TEŞEKKÜRLER!
+        Crypto Chatbot Projesi Başarıyla Tamamlandı
+═══════════════════════════════════════════════════════════════════════════════
+
+        🔐 Güvenli ve eğitici bir kriptografi deneyimi
+                  için hazırlandı!
+
+             Claude Code ile geliştirildi
+                  2025-10-24
+
+═══════════════════════════════════════════════════════════════════════════════
