@@ -35,6 +35,12 @@ def index():
     return render_template('chat.html')
 
 
+@app.route('/test')
+def test():
+    """Test page to verify Flask templates are working"""
+    return render_template('test.html')
+
+
 @app.route('/api/session/new', methods=['POST'])
 def create_session():
     """
