@@ -5,6 +5,50 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Panel - Crypto Chatbot</title>
     <style>
+        :root {
+            /* Light Mode Colors */
+            --bg-gradient-1: #667eea;
+            --bg-gradient-2: #764ba2;
+            --container-bg: rgba(255, 255, 255, 0.95);
+            --card-bg: #ffffff;
+            --text-primary: #333333;
+            --text-secondary: #666666;
+            --text-hint: #999999;
+            --border-color: #e0e0e0;
+            --editor-bg: #f9f9f9;
+            --editor-focus-bg: #ffffff;
+            --shadow-sm: rgba(0, 0, 0, 0.1);
+            --shadow-md: rgba(0, 0, 0, 0.2);
+            --success-bg: #d4edda;
+            --success-text: #155724;
+            --success-border: #c3e6cb;
+            --error-bg: #f8d7da;
+            --error-text: #721c24;
+            --error-border: #f5c6cb;
+        }
+
+        [data-theme="dark"] {
+            /* Dark Mode Colors */
+            --bg-gradient-1: #1a1a2e;
+            --bg-gradient-2: #16213e;
+            --container-bg: rgba(15, 20, 25, 0.95);
+            --card-bg: #1a202c;
+            --text-primary: #e4e6eb;
+            --text-secondary: #b0b3b8;
+            --text-hint: #8a8d91;
+            --border-color: #2d3748;
+            --editor-bg: #0f1419;
+            --editor-focus-bg: #1a202c;
+            --shadow-sm: rgba(0, 0, 0, 0.3);
+            --shadow-md: rgba(0, 0, 0, 0.5);
+            --success-bg: #1e4620;
+            --success-text: #7dff88;
+            --success-border: #2d5f30;
+            --error-bg: #4a1c1c;
+            --error-text: #ffb3b3;
+            --error-border: #6b2d2d;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -13,9 +57,10 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, var(--bg-gradient-1) 0%, var(--bg-gradient-2) 100%);
             min-height: 100vh;
             padding: 20px;
+            transition: background 0.4s ease;
         }
 
         .container {
@@ -25,13 +70,43 @@
 
         /* Header */
         .header {
-            background: rgba(255, 255, 255, 0.95);
+            background: var(--container-bg);
             padding: 30px;
             border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 10px 30px var(--shadow-md);
             margin-bottom: 30px;
             text-align: center;
+            position: relative;
             animation: slideDown 0.5s ease-out;
+            transition: all 0.4s ease;
+        }
+
+        .theme-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, var(--bg-gradient-1) 0%, var(--bg-gradient-2) 100%);
+            border: none;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            color: white;
+            box-shadow: 0 4px 15px var(--shadow-sm);
+        }
+
+        .theme-toggle:hover {
+            transform: rotate(15deg) scale(1.1);
+            box-shadow: 0 6px 20px var(--shadow-md);
+        }
+
+        .theme-toggle:active {
+            transform: rotate(15deg) scale(0.95);
         }
 
         @keyframes slideDown {
@@ -74,17 +149,17 @@
         }
 
         .stat-card {
-            background: white;
+            background: var(--card-bg);
             padding: 25px;
             border-radius: 15px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 5px 15px var(--shadow-sm);
             text-align: center;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            transition: all 0.3s ease;
         }
 
         .stat-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 10px 25px var(--shadow-md);
         }
 
         .stat-card .icon {
@@ -94,15 +169,16 @@
 
         .stat-card .label {
             font-size: 14px;
-            color: #666;
+            color: var(--text-secondary);
             margin-bottom: 8px;
             font-weight: 500;
+            transition: color 0.4s ease;
         }
 
         .stat-card .value {
             font-size: 32px;
             font-weight: bold;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, var(--bg-gradient-1) 0%, var(--bg-gradient-2) 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
@@ -110,24 +186,27 @@
 
         /* Code Editor Section */
         .editor-section {
-            background: white;
+            background: var(--card-bg);
             padding: 30px;
             border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 10px 30px var(--shadow-md);
             animation: fadeIn 0.8s ease-out;
+            transition: all 0.4s ease;
         }
 
         .editor-section h2 {
             font-size: 24px;
             margin-bottom: 10px;
-            color: #333;
+            color: var(--text-primary);
+            transition: color 0.4s ease;
         }
 
         .editor-description {
             font-size: 14px;
-            color: #666;
+            color: var(--text-secondary);
             margin-bottom: 20px;
             line-height: 1.5;
+            transition: color 0.4s ease;
         }
 
         .editor-header {
@@ -141,27 +220,30 @@
 
         .last-updated {
             font-size: 13px;
-            color: #999;
+            color: var(--text-hint);
             font-style: italic;
+            transition: color 0.4s ease;
         }
 
         #codeEditor {
             width: 100%;
             height: 450px;
             padding: 15px;
-            border: 2px solid #e0e0e0;
+            border: 2px solid var(--border-color);
             border-radius: 10px;
             font-family: 'Courier New', monospace;
             font-size: 14px;
             resize: vertical;
             outline: none;
-            transition: border-color 0.3s ease;
-            background: #f9f9f9;
+            transition: all 0.3s ease;
+            background: var(--editor-bg);
+            color: var(--text-primary);
         }
 
         #codeEditor:focus {
-            border-color: #667eea;
-            background: white;
+            border-color: var(--bg-gradient-1);
+            background: var(--editor-focus-bg);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
 
         .button-group {
@@ -179,26 +261,26 @@
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 10px var(--shadow-sm);
         }
 
         .btn-save {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, var(--bg-gradient-1) 0%, var(--bg-gradient-2) 100%);
             color: white;
         }
 
         .btn-save:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 15px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 6px 15px var(--shadow-md);
         }
 
         .btn-reload {
-            background: #6c757d;
+            background: var(--text-secondary);
             color: white;
         }
 
         .btn-reload:hover {
-            background: #5a6268;
+            opacity: 0.8;
             transform: translateY(-2px);
         }
 
@@ -213,6 +295,7 @@
             margin-top: 20px;
             display: none;
             animation: slideIn 0.3s ease-out;
+            transition: all 0.4s ease;
         }
 
         @keyframes slideIn {
@@ -231,15 +314,15 @@
         }
 
         .alert-success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
+            background: var(--success-bg);
+            color: var(--success-text);
+            border: 1px solid var(--success-border);
         }
 
         .alert-error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
+            background: var(--error-bg);
+            color: var(--error-text);
+            border: 1px solid var(--error-border);
         }
 
         .alert-icon {
@@ -312,6 +395,9 @@
     <div class="container">
         <!-- Header -->
         <div class="header">
+            <button class="theme-toggle" id="themeToggle" title="Toggle theme">
+                <span id="themeIcon">🌙</span>
+            </button>
             <h1>🔐 Admin Panel</h1>
         </div>
 
@@ -368,6 +454,31 @@
     </div>
 
     <script>
+        // Theme Management
+        function initTheme() {
+            const savedTheme = localStorage.getItem('chatbot_theme') || 'light';
+            const themeIcon = document.getElementById('themeIcon');
+
+            if (savedTheme === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                themeIcon.textContent = '☀️';
+            } else {
+                document.documentElement.setAttribute('data-theme', 'light');
+                themeIcon.textContent = '🌙';
+            }
+        }
+
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            const themeIcon = document.getElementById('themeIcon');
+
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('chatbot_theme', newTheme);
+
+            themeIcon.textContent = newTheme === 'dark' ? '☀️' : '🌙';
+        }
+
         // Load code from server
         async function loadCode() {
             try {
@@ -466,6 +577,13 @@
 
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', () => {
+            // Initialize theme first
+            initTheme();
+
+            // Theme toggle button
+            document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+
+            // Load code and stats
             loadCode();
             loadStats();
 
