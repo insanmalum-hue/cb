@@ -59,7 +59,7 @@ class AdvancedChatbot:
     def generate_response(self, user_message: str, target_word: Optional[str],
                          session_id: str) -> str:
         """
-        Generate response using active API
+        Generate response using active API with automatic fallback
 
         Args:
             user_message: User's message
@@ -73,28 +73,42 @@ class AdvancedChatbot:
         # Prepare messages
         messages = self._prepare_messages(user_message, target_word, session_id)
 
-        # Try primary API
-        try:
-            if self.active_api == 'groq':
-                response = self._generate_with_groq(messages)
-            elif self.active_api == 'huggingface':
-                response = self._generate_with_huggingface(messages)
-            elif self.active_api == 'together':
-                response = self._generate_with_together(messages)
-            elif self.active_api == 'cohere':
-                response = self._generate_with_cohere(messages)
-            else:
-                response = self._generate_fallback(user_message, target_word)
+        # Try all available APIs in priority order
+        api_methods = []
 
-            # Update conversation memory
-            self._update_memory(session_id, user_message, response)
+        if self.groq_key:
+            api_methods.append(('groq', self._generate_with_groq))
+        if self.hf_key:
+            api_methods.append(('huggingface', self._generate_with_huggingface))
+        if self.together_key:
+            api_methods.append(('together', self._generate_with_together))
+        if self.cohere_key:
+            api_methods.append(('cohere', self._generate_with_cohere))
 
-            return response
+        # Try each API
+        for api_name, api_method in api_methods:
+            try:
+                response = api_method(messages)
 
-        except Exception as e:
-            print(f"⚠️  {self.active_api.upper()} API Error: {e}")
-            print("↪️  Falling back to basic responses...")
-            return self._generate_fallback(user_message, target_word)
+                # Update conversation memory
+                self._update_memory(session_id, user_message, response)
+
+                # Log which API succeeded
+                if api_name != self.active_api:
+                    print(f"✓ {api_name.upper()} API succeeded (fallback from {self.active_api.upper()})")
+
+                return response
+
+            except Exception as e:
+                print(f"⚠️  {api_name.upper()} API Error: {e}")
+                if api_name == api_methods[-1][0]:  # Last API
+                    print("↪️  All APIs failed. Falling back to basic responses...")
+                else:
+                    print(f"↪️  Trying next API...")
+                continue
+
+        # If all APIs failed, use fallback
+        return self._generate_fallback(user_message, target_word)
 
     def _prepare_messages(self, user_message: str, target_word: Optional[str],
                          session_id: str) -> list:
