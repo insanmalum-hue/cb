@@ -52,14 +52,39 @@ pip install -r requirements.txt
 
 ### Step 3: Configure Environment
 
-Edit the `.env` file and add your OpenAI API key:
+Edit the `.env` file and add at least one AI API key:
+
+#### Option A: FREE AI APIs (Recommended - Much Faster!)
+
+**🚀 Groq API (FASTEST - 300+ tokens/sec)**
+1. Visit https://console.groq.com
+2. Create free account
+3. Generate API key
+4. Add to `.env`: `GROQ_API_KEY=your-key-here`
+
+**🤗 Hugging Face (Free 1000 req/hour)**
+1. Visit https://huggingface.co/settings/tokens
+2. Create token
+3. Add to `.env`: `HUGGINGFACE_API_KEY=your-token-here`
+
+**🌐 Together AI (Free $25 credit)**
+1. Visit https://api.together.xyz
+2. Sign up
+3. Get API key
+4. Add to `.env`: `TOGETHER_API_KEY=your-key-here`
+
+**💬 Cohere (Free tier)**
+1. Visit https://dashboard.cohere.com/api-keys
+2. Create API key
+3. Add to `.env`: `COHERE_API_KEY=your-key-here`
+
+#### Option B: OpenAI (Paid)
 
 ```
-SECRET_KEY=crypto-secret-key-12345-change-in-production
 OPENAI_API_KEY=your-openai-api-key-here
 ```
 
-**Note**: If you don't have an OpenAI API key, the system will automatically run in fallback mode with pre-generated responses.
+**Note**: If no API key is provided, the system will run in fallback mode with pre-generated responses. For best experience, use Groq API (fastest and free!).
 
 ### Step 4: Run the Application
 
