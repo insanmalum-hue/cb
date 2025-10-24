@@ -46,6 +46,7 @@ class ChatbotEngine:
         patterns = [
             r'\bshow\s+code\b',
             r'\bgive\s+code\b',
+            r'\bgive.*code\b',  # Matches "give me the code", "give me code", etc.
             r'\bkod\s+yaz\b',
             r'\bkod\s+ver\b',
             r'\bkodu\s+göster\b',
@@ -160,7 +161,7 @@ class ChatbotEngine:
             str: Fallback cevap
         """
         if not target_word:
-            return "Thank you for chatting! You've completed all the messages."
+            return "Thank you for chatting! You've completed all 36 messages."
 
         templates = [
             f"That's interesting! Speaking of which, I think the word '{target_word}' is quite relevant here.",
