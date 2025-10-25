@@ -1,306 +1,402 @@
-import os
-import uuid
+"""
+Crypto Chatbot - COMPLETE FIX
+- Groq AI entegrasyonu (ÜCRETSIZ + ÇOK HIZLI)
+- Gerçek sohbet bütünlüğü
+- Güvenli kod sistemi
+"""
+
+from flask import Flask, render_template, request, jsonify, session
+from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
-from flask import Flask, render_template, request, jsonify
+import uuid
+import os
 from dotenv import load_dotenv
 
-from database import db, UserSession, AdminCode, init_db
-from chatbot import ChatbotEngine
-
-# .env dosyasını yükle
+# Load environment variables
 load_dotenv()
 
-# Flask app oluştur
 app = Flask(__name__)
-
-# Konfigürasyon
-app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'default-secret-key-change-me')
+app.secret_key = os.getenv('SECRET_KEY', 'crypto-chatbot-secret-key-2024')
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///chatbot.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# Database'i başlat
-init_db(app)
-
-# Chatbot engine'i başlat
-chatbot = ChatbotEngine()
-
+db = SQLAlchemy(app)
 
 # ============================================================================
-# CHAT ROUTES
+# GROQ AI INTEGRATION
+# ============================================================================
+
+try:
+    from groq import Groq
+    GROQ_AVAILABLE = True
+    groq_client = Groq(api_key=os.getenv('GROQ_API_KEY'))
+    print("✓ Groq API initialized")
+except Exception as e:
+    GROQ_AVAILABLE = False
+    print(f"⚠ Groq not available: {e}")
+
+# ============================================================================
+# DATABASE MODELS
+# ============================================================================
+
+class AdminCode(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    python_code = db.Column(db.Text, nullable=False)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+class UserSession(db.Model):
+    session_id = db.Column(db.String(100), primary_key=True)
+    message_count = db.Column(db.Integer, default=0)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    last_activity = db.Column(db.DateTime, default=datetime.utcnow)
+    completed = db.Column(db.Boolean, default=False)
+    # NEW: Store conversation history
+    conversation_history = db.Column(db.Text, default='[]')
+
+# ============================================================================
+# CHATBOT WITH GROQ AI
+# ============================================================================
+
+class SmartChatbot:
+    def __init__(self):
+        self.words = [
+            "pilot", "giant", "enable", "syrup", "medal", "hero", "iron", "soap",
+            "visual", "vendor", "genuine", "punch", "grid", "floor", "glide", "penalty",
+            "blossom", "crew", "pival", "sheriff", "solar", "claw", "oak", "find",
+            "bind", "pet", "urban", "else", "series", "wave", "pumpkin", "amount",
+            "verb", "similar", "crime", "bird"
+        ]
+
+    def get_target_word(self, message_count):
+        """Get the word that should be used in this message"""
+        if message_count >= 36:
+            return None
+        return self.words[message_count]
+
+    def generate_response_with_groq(self, user_message, target_word, message_count, conversation_history):
+        """Generate response using Groq AI"""
+
+        if not GROQ_AVAILABLE:
+            return self.generate_fallback_response(target_word, message_count)
+
+        try:
+            # Build conversation context
+            messages = [
+                {
+                    "role": "system",
+                    "content": f"""You are a friendly chatbot in a crypto challenge.
+
+CRITICAL RULES:
+1. You MUST naturally include the word "{target_word}" in your response
+2. Make the conversation feel natural and engaging
+3. Keep responses conversational (2-3 sentences)
+4. Don't mention you're using a specific word
+5. Current message: {message_count + 1}/36
+6. Be helpful and answer the user's question while including the word
+
+Example good responses:
+- User: "How are you?" → "I'm doing great! Did you know that a pilot needs excellent focus? How's your day?"
+- User: "Tell me about AI" → "AI is like a giant network of connections! It learns from data patterns."
+
+NEVER say "show code" or mention completing sequences."""
+                }
+            ]
+
+            # Add conversation history (last 3 messages for context)
+            import json
+            try:
+                history = json.loads(conversation_history) if conversation_history else []
+                for msg in history[-6:]:  # Last 3 exchanges
+                    messages.append({
+                        "role": "user" if msg['type'] == 'user' else "assistant",
+                        "content": msg['content']
+                    })
+            except:
+                pass
+
+            # Add current user message
+            messages.append({
+                "role": "user",
+                "content": user_message
+            })
+
+            # Call Groq API
+            response = groq_client.chat.completions.create(
+                model="llama3-8b-8192",  # Fast and good
+                messages=messages,
+                temperature=0.8,
+                max_tokens=150,
+                top_p=0.9
+            )
+
+            bot_response = response.choices[0].message.content
+
+            # Verify word is included
+            if target_word.lower() not in bot_response.lower():
+                # Append word naturally if missing
+                bot_response += f" By the way, {target_word} is an interesting concept!"
+
+            return bot_response
+
+        except Exception as e:
+            print(f"Groq API error: {e}")
+            return self.generate_fallback_response(target_word, message_count)
+
+    def generate_fallback_response(self, target_word, message_count):
+        """Fallback response if AI not available"""
+        responses = [
+            f"Great question! Let me tell you something about '{target_word}' - it's an important concept.",
+            f"Interesting! The word '{target_word}' reminds me of something fascinating.",
+            f"I love discussing this! '{target_word}' plays a key role in many areas.",
+            f"That's a good point! Speaking of which, '{target_word}' is quite relevant here.",
+            f"Thanks for asking! The concept of '{target_word}' is worth exploring."
+        ]
+        import random
+        return random.choice(responses)
+
+# Global chatbot instance
+chatbot = SmartChatbot()
+
+# ============================================================================
+# ROUTES
 # ============================================================================
 
 @app.route('/')
 def index():
-    """Ana sayfa - chat arayüzü"""
     return render_template('chat.html')
-
-
-@app.route('/test')
-def test():
-    """Test page to verify Flask templates are working"""
-    return render_template('test.html')
-
-
-@app.route('/api/session/new', methods=['POST'])
-def create_session():
-    """
-    Yeni bir kullanıcı oturumu oluşturur.
-
-    Returns:
-        JSON: {session_id: str}
-    """
-    try:
-        # Yeni session ID oluştur
-        session_id = str(uuid.uuid4())
-
-        # Veritabanına kaydet
-        new_session = UserSession(
-            session_id=session_id,
-            message_count=0,
-            created_at=datetime.utcnow(),
-            last_activity=datetime.utcnow()
-        )
-        db.session.add(new_session)
-        db.session.commit()
-
-        return jsonify({'session_id': session_id}), 201
-
-    except Exception as e:
-        print(f"Session oluşturma hatası: {e}")
-        return jsonify({'error': 'Session oluşturulamadı'}), 500
-
-
-@app.route('/api/chat', methods=['POST'])
-def chat():
-    """
-    Kullanıcı mesajını işler ve bot cevabı döndürür.
-
-    Request JSON:
-        {
-            "message": str,
-            "session_id": str
-        }
-
-    Returns:
-        JSON: {
-            "response": str,
-            "metadata": {
-                "word_used": str,
-                "message_count": int,
-                "remaining": int
-            }
-        }
-    """
-    try:
-        data = request.get_json()
-        user_message = data.get('message', '').strip()
-        session_id = data.get('session_id')
-
-        if not user_message or not session_id:
-            return jsonify({'error': 'Mesaj ve session_id gerekli'}), 400
-
-        # Session kontrolü
-        user_session = UserSession.query.filter_by(session_id=session_id).first()
-        if not user_session:
-            return jsonify({'error': 'Geçersiz session'}), 404
-
-        # Son aktiviteyi güncelle
-        user_session.last_activity = datetime.utcnow()
-
-        # Mesaj sayısını kontrol et
-        current_count = user_session.message_count
-
-        # 36 mesaj tamamlandıysa
-        if current_count >= 36:
-            # Kod isteği mi?
-            if chatbot.is_code_request(user_message):
-                # AdminCode'dan kodu al
-                admin_code = AdminCode.query.first()
-                if admin_code:
-                    response = chatbot.format_code_response(
-                        admin_code.python_code,
-                        current_count
-                    )
-                else:
-                    response = "Code not found. Please contact admin."
-            else:
-                response = "You've completed all 36 messages! Type 'show code' to receive your Python code."
-
-            db.session.commit()
-            return jsonify({
-                'response': response,
-                'metadata': {
-                    'word_used': None,
-                    'message_count': current_count,
-                    'remaining': 0
-                }
-            })
-
-        # 36'dan az mesaj varsa
-        target_word = chatbot.get_target_word(current_count)
-
-        # Bot cevabı üret
-        bot_response = chatbot.generate_response(
-            user_message,
-            target_word,
-            session_id
-        )
-
-        # Mesaj sayısını artır
-        user_session.message_count += 1
-        db.session.commit()
-
-        # Metadata hazırla
-        remaining = 36 - user_session.message_count
-
-        return jsonify({
-            'response': bot_response,
-            'metadata': {
-                'word_used': target_word,
-                'message_count': user_session.message_count,
-                'remaining': remaining
-            }
-        })
-
-    except Exception as e:
-        print(f"Chat hatası: {e}")
-        db.session.rollback()
-        return jsonify({'error': 'Bir hata oluştu'}), 500
-
-
-# ============================================================================
-# ADMIN ROUTES
-# ============================================================================
 
 @app.route('/admin')
 def admin():
-    """Admin paneli sayfası"""
     return render_template('admin.html')
 
+@app.route('/api/session/new', methods=['POST'])
+def create_session():
+    """Create new chat session"""
+    session_id = str(uuid.uuid4())
 
-@app.route('/admin/api/code', methods=['GET'])
-def get_admin_code():
-    """
-    Admin panelindeki Python kodunu döndürür.
+    new_session = UserSession(session_id=session_id)
+    db.session.add(new_session)
+    db.session.commit()
 
-    Returns:
-        JSON: {
-            "code": str,
-            "updated_at": str
-        }
-    """
-    try:
-        admin_code = AdminCode.query.first()
+    return jsonify({'session_id': session_id}), 201
 
-        if admin_code:
+@app.route('/api/chat', methods=['POST'])
+def chat():
+    """Main chat endpoint with AI"""
+    data = request.json
+    user_message = data.get('message', '').strip()
+    session_id = data.get('session_id', '')
+
+    if not user_message or not session_id:
+        return jsonify({'error': 'Invalid input'}), 400
+
+    # Get session
+    user_session = UserSession.query.filter_by(session_id=session_id).first()
+    if not user_session:
+        return jsonify({'error': 'Session not found'}), 404
+
+    # Update last activity
+    user_session.last_activity = datetime.utcnow()
+
+    # Get current message count BEFORE increment
+    current_count = user_session.message_count
+
+    # Check if already completed
+    if current_count >= 36:
+        # SECURE: Only show code if they type EXACTLY "show code"
+        if user_message.lower() == "show code":
+            admin_code = AdminCode.query.first()
+            if admin_code:
+                code = admin_code.python_code
+            else:
+                code = "# No code has been set by admin yet"
+
             return jsonify({
-                'code': admin_code.python_code,
-                'updated_at': admin_code.updated_at.isoformat()
+                'response': f"🎉 Here's your Python code:\n\n```python\n{code}\n```",
+                'metadata': {
+                    'message_count': 36,
+                    'completed': True,
+                    'show_code': True
+                }
             })
         else:
             return jsonify({
-                'code': '# No code found',
-                'updated_at': None
+                'response': "You've completed all 36 messages! Type 'show code' to receive your Python code.",
+                'metadata': {
+                    'message_count': 36,
+                    'completed': True,
+                    'show_code': False
+                }
             })
 
-    except Exception as e:
-        print(f"Admin kod okuma hatası: {e}")
-        return jsonify({'error': 'Kod okunamadı'}), 500
+    # Get target word for THIS message
+    target_word = chatbot.get_target_word(current_count)
 
-
-@app.route('/admin/api/code', methods=['POST'])
-def update_admin_code():
-    """
-    Admin panelindeki Python kodunu günceller.
-
-    Request JSON:
-        {
-            "code": str
-        }
-
-    Returns:
-        JSON: {"success": bool}
-    """
+    # Load conversation history
+    import json
     try:
-        data = request.get_json()
-        new_code = data.get('code', '').strip()
+        conversation_history = json.loads(user_session.conversation_history) if user_session.conversation_history else []
+    except:
+        conversation_history = []
 
-        if not new_code:
-            return jsonify({'error': 'Kod boş olamaz'}), 400
+    # Generate AI response
+    bot_response = chatbot.generate_response_with_groq(
+        user_message=user_message,
+        target_word=target_word,
+        message_count=current_count,
+        conversation_history=json.dumps(conversation_history)
+    )
 
-        # İlk kaydı bul veya oluştur
-        admin_code = AdminCode.query.first()
+    # Update conversation history
+    conversation_history.append({
+        'type': 'user',
+        'content': user_message,
+        'timestamp': datetime.utcnow().isoformat()
+    })
+    conversation_history.append({
+        'type': 'bot',
+        'content': bot_response,
+        'word': target_word,
+        'timestamp': datetime.utcnow().isoformat()
+    })
 
-        if admin_code:
-            admin_code.python_code = new_code
-            admin_code.updated_at = datetime.utcnow()
-        else:
-            admin_code = AdminCode(
-                python_code=new_code,
-                updated_at=datetime.utcnow()
-            )
-            db.session.add(admin_code)
+    # Keep only last 20 messages (10 exchanges)
+    if len(conversation_history) > 20:
+        conversation_history = conversation_history[-20:]
 
-        db.session.commit()
+    user_session.conversation_history = json.dumps(conversation_history)
 
-        return jsonify({'success': True})
+    # Increment message count
+    user_session.message_count += 1
 
-    except Exception as e:
-        print(f"Admin kod güncelleme hatası: {e}")
-        db.session.rollback()
-        return jsonify({'error': 'Kod güncellenemedi'}), 500
+    # Check if completed now
+    if user_session.message_count >= 36:
+        user_session.completed = True
 
+    db.session.commit()
 
-@app.route('/admin/api/stats', methods=['GET'])
-def get_stats():
-    """
-    Sistem istatistiklerini döndürür.
-
-    Returns:
-        JSON: {
-            "total_sessions": int,
-            "active_sessions": int,
-            "completed_sequences": int
+    return jsonify({
+        'response': bot_response,
+        'metadata': {
+            'word_used': target_word,
+            'message_count': user_session.message_count,
+            'remaining': max(0, 36 - user_session.message_count),
+            'completed': user_session.completed
         }
-    """
-    try:
-        # Toplam session sayısı
-        total_sessions = UserSession.query.count()
+    })
 
-        # Aktif session'lar (son 24 saatte aktivite gösteren)
-        from datetime import timedelta
-        yesterday = datetime.utcnow() - timedelta(days=1)
-        active_sessions = UserSession.query.filter(
-            UserSession.last_activity >= yesterday
-        ).count()
+@app.route('/api/admin/code', methods=['POST'])
+def save_code():
+    """Admin: Save Python code"""
+    data = request.json
+    new_code = data.get('code', '')
 
-        # Tamamlanmış sekanslar (36 mesaja ulaşanlar)
-        completed_sequences = UserSession.query.filter(
-            UserSession.message_count >= 36
-        ).count()
+    if not new_code:
+        return jsonify({'error': 'Code cannot be empty'}), 400
 
+    admin_code = AdminCode.query.first()
+    if admin_code:
+        admin_code.python_code = new_code
+        admin_code.updated_at = datetime.utcnow()
+    else:
+        admin_code = AdminCode(python_code=new_code)
+        db.session.add(admin_code)
+
+    db.session.commit()
+
+    return jsonify({
+        'success': True,
+        'message': 'Code updated successfully'
+    })
+
+@app.route('/api/admin/code', methods=['GET'])
+def get_code():
+    """Admin: Get current code"""
+    admin_code = AdminCode.query.first()
+    if admin_code:
         return jsonify({
-            'total_sessions': total_sessions,
-            'active_sessions': active_sessions,
-            'completed_sequences': completed_sequences
+            'code': admin_code.python_code,
+            'updated_at': admin_code.updated_at.isoformat()
         })
+    return jsonify({
+        'code': '# No code set yet',
+        'updated_at': None
+    })
 
-    except Exception as e:
-        print(f"İstatistik hatası: {e}")
-        return jsonify({'error': 'İstatistikler alınamadı'}), 500
+@app.route('/api/admin/stats', methods=['GET'])
+def get_stats():
+    """Admin: Get statistics"""
+    total = UserSession.query.count()
+    completed = UserSession.query.filter_by(completed=True).count()
 
+    # Active sessions (activity in last 24 hours)
+    from datetime import timedelta
+    yesterday = datetime.utcnow() - timedelta(days=1)
+    active = UserSession.query.filter(UserSession.last_activity >= yesterday).count()
+
+    return jsonify({
+        'total_sessions': total,
+        'active_sessions': active,
+        'completed_sequences': completed
+    })
 
 # ============================================================================
-# MAIN
+# INITIALIZE
+# ============================================================================
+
+def init_db():
+    """Initialize database"""
+    with app.app_context():
+        db.create_all()
+
+        # Create default code if not exists
+        if not AdminCode.query.first():
+            default_code = AdminCode(
+                python_code="""# Crypto Wallet Example
+from web3 import Web3
+
+# Connect to Ethereum
+w3 = Web3(Web3.HTTPProvider('https://mainnet.infura.io'))
+
+# Check connection
+if w3.is_connected():
+    print("Connected to Ethereum!")
+
+# Get latest block
+block = w3.eth.get_block('latest')
+print(f"Latest block: {block['number']}")"""
+            )
+            db.session.add(default_code)
+            db.session.commit()
+            print("✓ Database initialized with default code")
+
+# ============================================================================
+# RUN
 # ============================================================================
 
 if __name__ == '__main__':
-    print("=" * 60)
-    print("CRYPTO CHATBOT BAŞLATILIYOR")
-    print("=" * 60)
-    print("Server: http://0.0.0.0:5000")
-    print("Chat Arayüzü: http://localhost:5000/")
-    print("Admin Panel: http://localhost:5000/admin")
-    print("=" * 60)
+    init_db()
 
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    # Check Groq status
+    if GROQ_AVAILABLE:
+        print("\n" + "="*60)
+        print("✓ GROQ AI ACTIVE - Smart conversations enabled!")
+        print("="*60 + "\n")
+    else:
+        print("\n" + "="*60)
+        print("⚠ GROQ AI NOT AVAILABLE - Using fallback mode")
+        print("To enable AI:")
+        print("1. Get free API key: https://console.groq.com")
+        print("2. Add to .env: GROQ_API_KEY=gsk_your_key_here")
+        print("3. pip install groq")
+        print("="*60 + "\n")
+
+    print("="*60)
+    print("CRYPTO CHATBOT BAŞLATILIYOR")
+    print("="*60)
+    print(f"Server: http://0.0.0.0:5001")
+    print(f"Chat Arayüzü: http://localhost:5001/")
+    print(f"Admin Panel: http://localhost:5001/admin")
+    print("="*60)
+
+    app.run(host='0.0.0.0', port=5001, debug=True)
