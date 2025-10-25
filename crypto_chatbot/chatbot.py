@@ -100,7 +100,7 @@ Now respond to the user naturally while including the word "{target_word}"."""
 
         # Call Groq API
         response = self.client.chat.completions.create(
-            model="llama3-8b-8192",
+            model="llama-3.1-8b-instant",  # Updated model (llama3-8b-8192 deprecated May 2025)
             messages=messages,
             temperature=0.8,
             max_tokens=150,

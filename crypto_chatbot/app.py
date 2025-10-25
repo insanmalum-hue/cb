@@ -122,7 +122,7 @@ NEVER say "show code" or mention completing sequences."""
 
             # Call Groq API
             response = groq_client.chat.completions.create(
-                model="llama3-8b-8192",  # Fast and good
+                model="llama-3.1-8b-instant",  # Updated model (llama3-8b-8192 deprecated May 2025)
                 messages=messages,
                 temperature=0.8,
                 max_tokens=150,
