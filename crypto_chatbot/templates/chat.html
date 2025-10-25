@@ -898,7 +898,39 @@
                         updateHint(data.metadata.remaining);
                     }
                 } else {
-                    addMessage('bot', translations[currentLang].error_prefix + (data.error || 'Unknown error'));
+                    // If session not found, clear localStorage and create new session
+                    if (data.error === 'Session not found') {
+                        console.log('Session expired, creating new session...');
+                        localStorage.removeItem('chatbot_session_id');
+                        sessionId = null;
+                        await init();
+                        // Retry the message
+                        if (sessionId) {
+                            const retryResponse = await fetch('/api/chat', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    message: message,
+                                    session_id: sessionId
+                                })
+                            });
+                            const retryData = await retryResponse.json();
+                            if (retryResponse.ok) {
+                                if (retryData.response.includes('```python')) {
+                                    addCodeMessage(retryData.response);
+                                } else {
+                                    addMessage('bot', retryData.response);
+                                }
+                                if (retryData.metadata) {
+                                    messageCount = retryData.metadata.message_count;
+                                    updateProgress(messageCount);
+                                    updateHint(retryData.metadata.remaining);
+                                }
+                            }
+                        }
+                    } else {
+                        addMessage('bot', translations[currentLang].error_prefix + (data.error || 'Unknown error'));
+                    }
                 }
             } catch (error) {
                 hideTyping();
