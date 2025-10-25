@@ -90,10 +90,16 @@
             margin-bottom: 10px;
         }
 
-        .theme-toggle {
+        .header-controls {
             position: absolute;
             top: 20px;
             right: 20px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .theme-toggle, .lang-toggle {
             background: rgba(255, 255, 255, 0.2);
             border: none;
             width: 45px;
@@ -106,15 +112,84 @@
             justify-content: center;
             transition: all 0.3s ease;
             backdrop-filter: blur(10px);
+            color: white;
+        }
+
+        .theme-toggle:hover, .lang-toggle:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
         }
 
         .theme-toggle:hover {
-            background: rgba(255, 255, 255, 0.3);
             transform: rotate(15deg) scale(1.1);
         }
 
-        .theme-toggle:active {
-            transform: rotate(15deg) scale(0.95);
+        .theme-toggle:active, .lang-toggle:active {
+            transform: scale(0.95);
+        }
+
+        /* Language Dropdown */
+        .lang-dropdown {
+            position: relative;
+        }
+
+        .lang-menu {
+            position: absolute;
+            top: 55px;
+            right: 0;
+            background: var(--container-bg);
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            padding: 8px;
+            min-width: 180px;
+            display: none;
+            z-index: 1000;
+            box-shadow: 0 8px 24px var(--shadow-md);
+            animation: slideDown 0.2s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .lang-menu.active {
+            display: block;
+        }
+
+        .lang-option {
+            padding: 10px 15px;
+            cursor: pointer;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.2s ease;
+            color: var(--text-primary);
+            font-size: 14px;
+        }
+
+        .lang-option:hover {
+            background: var(--message-bg);
+        }
+
+        .lang-option.active {
+            background: linear-gradient(135deg, var(--bg-gradient-1) 0%, var(--bg-gradient-2) 100%);
+            color: white;
+        }
+
+        .lang-flag {
+            font-size: 20px;
+        }
+
+        .lang-name {
+            flex: 1;
         }
 
         .progress-container {
@@ -315,31 +390,56 @@
 <body>
     <div class="container">
         <div class="header">
-            <button class="theme-toggle" id="themeToggle" title="Toggle theme">
-                <span id="themeIcon">🌙</span>
-            </button>
-            <h1>🔐 Crypto Chatbot</h1>
+            <div class="header-controls">
+                <div class="lang-dropdown">
+                    <button class="lang-toggle" id="langToggle" title="Change language">
+                        <span id="langIcon">🌐</span>
+                    </button>
+                    <div class="lang-menu" id="langMenu">
+                        <div class="lang-option" data-lang="en">
+                            <span class="lang-flag">🇬🇧</span>
+                            <span class="lang-name">English</span>
+                        </div>
+                        <div class="lang-option" data-lang="tr">
+                            <span class="lang-flag">🇹🇷</span>
+                            <span class="lang-name">Türkçe</span>
+                        </div>
+                        <div class="lang-option" data-lang="es">
+                            <span class="lang-flag">🇪🇸</span>
+                            <span class="lang-name">Español</span>
+                        </div>
+                        <div class="lang-option" data-lang="fr">
+                            <span class="lang-flag">🇫🇷</span>
+                            <span class="lang-name">Français</span>
+                        </div>
+                    </div>
+                </div>
+                <button class="theme-toggle" id="themeToggle" title="Toggle theme">
+                    <span id="themeIcon">🌙</span>
+                </button>
+            </div>
+            <h1 data-i18n="title">🔐 Crypto Chatbot</h1>
             <div class="progress-container">
                 <div class="progress-bar" id="progressBar"></div>
             </div>
-            <div class="status" id="status">Message 0/36</div>
+            <div class="status" id="status"><span data-i18n="status_message">Message</span> 0/36</div>
         </div>
 
         <div class="messages" id="messages">
             <div class="message bot">
-                <div class="message-content">
+                <div class="message-content" data-i18n="welcome_message">
                     Welcome! Chat with me naturally. I'll help you discover something special after 36 messages.
                 </div>
             </div>
         </div>
 
-        <div class="typing" id="typing">Bot is typing...</div>
+        <div class="typing" id="typing"><span data-i18n="bot_typing">Bot is typing...</span></div>
 
         <div class="input-area">
-            <div class="input-hint" id="hint">Chat naturally to progress through the sequence...</div>
+            <div class="input-hint" id="hint"><span data-i18n="hint_message">Chat naturally to progress through the sequence...</span></div>
             <div class="input-container">
-                <input type="text" id="messageInput" placeholder="Type your message..." maxlength="500">
-                <button id="sendButton">Send</button>
+                <input type="text" id="messageInput" data-i18n-placeholder="input_placeholder" placeholder="Type your message..." maxlength="500">
+                <button id="sendButton" data-i18n="send_button">Send</button>
             </div>
         </div>
     </div>
@@ -347,6 +447,151 @@
     <script>
         let sessionId = localStorage.getItem('chatbot_session_id');
         let messageCount = 0;
+        let currentLang = localStorage.getItem('chatbot_language') || 'en';
+
+        // Translations
+        const translations = {
+            en: {
+                title: '🔐 Crypto Chatbot',
+                status_message: 'Message',
+                welcome_message: 'Welcome! Chat with me naturally. I\'ll help you discover something special after 36 messages.',
+                bot_typing: 'Bot is typing...',
+                hint_message: 'Chat naturally to progress through the sequence...',
+                input_placeholder: 'Type your message...',
+                send_button: 'Send',
+                hint_remaining: 'Only {n} messages remaining...',
+                hint_complete: 'Sequence complete! Type "show code" to receive your Python code.',
+                error_init: 'Error initializing chat. Please refresh the page.',
+                error_network: 'Network error. Please try again.',
+                error_prefix: 'Error: '
+            },
+            tr: {
+                title: '🔐 Kripto Chatbot',
+                status_message: 'Mesaj',
+                welcome_message: 'Hoş geldiniz! Benimle doğal bir şekilde sohbet edin. 36 mesajdan sonra özel bir şey keşfetmenize yardımcı olacağım.',
+                bot_typing: 'Bot yazıyor...',
+                hint_message: 'Sıralamayı ilerletmek için doğal bir şekilde sohbet edin...',
+                input_placeholder: 'Mesajınızı yazın...',
+                send_button: 'Gönder',
+                hint_remaining: 'Sadece {n} mesaj kaldı...',
+                hint_complete: 'Sıralama tamamlandı! Python kodunuzu almak için "show code" yazın.',
+                error_init: 'Sohbet başlatılırken hata oluştu. Lütfen sayfayı yenileyin.',
+                error_network: 'Ağ hatası. Lütfen tekrar deneyin.',
+                error_prefix: 'Hata: '
+            },
+            es: {
+                title: '🔐 Chatbot Cripto',
+                status_message: 'Mensaje',
+                welcome_message: '¡Bienvenido! Chatea conmigo de forma natural. Te ayudaré a descubrir algo especial después de 36 mensajes.',
+                bot_typing: 'El bot está escribiendo...',
+                hint_message: 'Chatea naturalmente para progresar en la secuencia...',
+                input_placeholder: 'Escribe tu mensaje...',
+                send_button: 'Enviar',
+                hint_remaining: 'Solo {n} mensajes restantes...',
+                hint_complete: '¡Secuencia completa! Escribe "show code" para recibir tu código Python.',
+                error_init: 'Error al inicializar el chat. Por favor, recarga la página.',
+                error_network: 'Error de red. Por favor, inténtalo de nuevo.',
+                error_prefix: 'Error: '
+            },
+            fr: {
+                title: '🔐 Chatbot Crypto',
+                status_message: 'Message',
+                welcome_message: 'Bienvenue ! Discutez avec moi naturellement. Je vous aiderai à découvrir quelque chose de spécial après 36 messages.',
+                bot_typing: 'Le bot écrit...',
+                hint_message: 'Discutez naturellement pour progresser dans la séquence...',
+                input_placeholder: 'Tapez votre message...',
+                send_button: 'Envoyer',
+                hint_remaining: 'Seulement {n} messages restants...',
+                hint_complete: 'Séquence complète ! Tapez "show code" pour recevoir votre code Python.',
+                error_init: 'Erreur lors de l\'initialisation du chat. Veuillez actualiser la page.',
+                error_network: 'Erreur réseau. Veuillez réessayer.',
+                error_prefix: 'Erreur : '
+            }
+        };
+
+        // Language Management
+        function initLanguage() {
+            updateLanguage(currentLang);
+            updateLangMenuSelection();
+        }
+
+        function updateLanguage(lang) {
+            currentLang = lang;
+            localStorage.setItem('chatbot_language', lang);
+
+            // Update all elements with data-i18n
+            document.querySelectorAll('[data-i18n]').forEach(element => {
+                const key = element.getAttribute('data-i18n');
+                if (translations[lang] && translations[lang][key]) {
+                    element.textContent = translations[lang][key];
+                }
+            });
+
+            // Update placeholders
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(element => {
+                const key = element.getAttribute('data-i18n-placeholder');
+                if (translations[lang] && translations[lang][key]) {
+                    element.placeholder = translations[lang][key];
+                }
+            });
+
+            // Update status message
+            updateStatusMessage();
+
+            // Update hint if needed
+            const hintElement = document.getElementById('hint');
+            if (hintElement && hintElement.dataset.remaining !== undefined) {
+                updateHintMessage(parseInt(hintElement.dataset.remaining));
+            }
+
+            // Update HTML lang attribute
+            document.documentElement.lang = lang;
+        }
+
+        function updateStatusMessage() {
+            const statusText = translations[currentLang].status_message;
+            document.getElementById('status').innerHTML = `${statusText} ${messageCount}/36`;
+        }
+
+        function updateHintMessage(remaining) {
+            const hintElement = document.getElementById('hint');
+            hintElement.dataset.remaining = remaining;
+
+            if (remaining === 0) {
+                hintElement.innerHTML = `<span>${translations[currentLang].hint_complete}</span>`;
+                hintElement.style.color = '#4CAF50';
+                hintElement.style.fontWeight = 'bold';
+            } else if (remaining <= 5) {
+                const message = translations[currentLang].hint_remaining.replace('{n}', remaining);
+                hintElement.innerHTML = `<span>${message}</span>`;
+                hintElement.style.color = '#FF9800';
+            } else {
+                hintElement.innerHTML = `<span>${translations[currentLang].hint_message}</span>`;
+                hintElement.style.color = '';
+                hintElement.style.fontWeight = '';
+            }
+        }
+
+        function toggleLangMenu() {
+            const menu = document.getElementById('langMenu');
+            menu.classList.toggle('active');
+        }
+
+        function selectLanguage(lang) {
+            updateLanguage(lang);
+            updateLangMenuSelection();
+            document.getElementById('langMenu').classList.remove('active');
+        }
+
+        function updateLangMenuSelection() {
+            document.querySelectorAll('.lang-option').forEach(option => {
+                if (option.dataset.lang === currentLang) {
+                    option.classList.add('active');
+                } else {
+                    option.classList.remove('active');
+                }
+            });
+        }
 
         // Theme Management
         function initTheme() {
@@ -387,7 +632,7 @@
                     console.log('New session created:', sessionId);
                 } catch (error) {
                     console.error('Init error:', error);
-                    addMessage('bot', 'Error initializing chat. Please refresh the page.');
+                    addMessage('bot', translations[currentLang].error_init);
                 }
             }
         }
@@ -438,11 +683,11 @@
                         updateHint(data.metadata.remaining);
                     }
                 } else {
-                    addMessage('bot', 'Error: ' + (data.error || 'Unknown error'));
+                    addMessage('bot', translations[currentLang].error_prefix + (data.error || 'Unknown error'));
                 }
             } catch (error) {
                 hideTyping();
-                addMessage('bot', 'Network error. Please try again.');
+                addMessage('bot', translations[currentLang].error_network);
                 console.error('Send error:', error);
             } finally {
                 // Re-enable input
@@ -508,22 +753,15 @@
 
         // Update progress
         function updateProgress(count) {
+            messageCount = count;
             const percentage = (count / 36) * 100;
             document.getElementById('progressBar').style.width = `${percentage}%`;
-            document.getElementById('status').textContent = `Message ${count}/36`;
+            updateStatusMessage();
         }
 
         // Update hint
         function updateHint(remaining) {
-            const hintElement = document.getElementById('hint');
-            if (remaining === 0) {
-                hintElement.textContent = 'Sequence complete! Type "show code" to receive your Python code.';
-                hintElement.style.color = '#4CAF50';
-                hintElement.style.fontWeight = 'bold';
-            } else if (remaining <= 5) {
-                hintElement.textContent = `Only ${remaining} messages remaining...`;
-                hintElement.style.color = '#FF9800';
-            }
+            updateHintMessage(remaining);
         }
 
         // Show/hide typing
@@ -543,11 +781,32 @@
 
         // Event listeners
         document.addEventListener('DOMContentLoaded', () => {
-            // Initialize theme first
+            // Initialize language first
+            initLanguage();
+
+            // Initialize theme
             initTheme();
 
             // Initialize chat session
             init();
+
+            // Language toggle button
+            document.getElementById('langToggle').addEventListener('click', toggleLangMenu);
+
+            // Language options
+            document.querySelectorAll('.lang-option').forEach(option => {
+                option.addEventListener('click', () => {
+                    selectLanguage(option.dataset.lang);
+                });
+            });
+
+            // Close language menu when clicking outside
+            document.addEventListener('click', (e) => {
+                const langDropdown = document.querySelector('.lang-dropdown');
+                if (!langDropdown.contains(e.target)) {
+                    document.getElementById('langMenu').classList.remove('active');
+                }
+            });
 
             // Theme toggle button
             document.getElementById('themeToggle').addEventListener('click', toggleTheme);
