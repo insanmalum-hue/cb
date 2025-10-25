@@ -1,13 +1,14 @@
 """
-Advanced Chatbot with Groq AI Integration
+Advanced Chatbot with Ollama Llama 3
+Kelimeleri AI ile doğal cümlelerde kullanır
 """
 
-import os
-from groq import Groq
+import requests
+import json
 
 class AdvancedChatbot:
     def __init__(self):
-        # 36 kelime
+        # 36 sabit kelime - sırayla kullanılacak
         self.words = [
             "pilot", "giant", "enable", "syrup", "medal", "hero", "iron", "soap",
             "visual", "vendor", "genuine", "punch", "grid", "floor", "glide", "penalty",
@@ -16,119 +17,151 @@ class AdvancedChatbot:
             "verb", "similar", "crime", "bird"
         ]
 
-        # Groq client
-        self.groq_available = False
+        self.ollama_url = "http://localhost:11434"
+        self.model = "llama3.2"
+
+        # Ollama bağlantısını kontrol et
         try:
-            api_key = os.getenv('GROQ_API_KEY')
-            if api_key:
-                self.client = Groq(api_key=api_key)
-                self.groq_available = True
-                print("✓ Groq AI initialized")
+            response = requests.get(f"{self.ollama_url}/api/tags", timeout=3)
+            if response.status_code == 200:
+                models = response.json().get('models', [])
+                if models:
+                    self.ollama_available = True
+                    print(f"✓ Ollama Llama 3 active! Model: {self.model}")
+                else:
+                    self.ollama_available = False
+                    print("⚠ No models found. Run: ollama pull llama3.2")
             else:
-                print("⚠ GROQ_API_KEY not found - using fallback mode")
+                self.ollama_available = False
+                print("⚠ Ollama not responding")
         except Exception as e:
-            print(f"⚠ Groq initialization failed: {e}")
+            self.ollama_available = False
+            print(f"⚠ Ollama not available: {e}")
+            print("  Solution: Open Ollama app or run 'ollama serve'")
 
     def get_target_word(self, message_count):
-        """Get word for current message"""
+        """Mesaj numarasına göre hedef kelimeyi al"""
         if message_count >= 36:
             return None
         return self.words[message_count]
 
     def generate_response(self, user_message, message_count, conversation_history=None):
-        """Generate AI response with target word"""
-
+        """
+        AI ile yanıt üret - kelimeyi doğal şekilde kullan
+        """
         target_word = self.get_target_word(message_count)
 
         if not target_word:
-            return "Sequence complete! Type 'show code' to get your code."
+            return "Tebrikler! 36 mesajı tamamladın. 'show code' yazarak kodunu al."
 
-        # Use Groq AI if available
-        if self.groq_available:
+        if self.ollama_available:
             try:
-                return self._generate_with_groq(user_message, target_word, conversation_history)
+                return self._generate_with_llama(user_message, target_word, conversation_history)
             except Exception as e:
-                print(f"Groq error: {e}")
-                # Fallback
-                return self._generate_fallback(target_word)
+                print(f"Llama error: {e}")
+                return self._fallback_response(target_word)
         else:
-            return self._generate_fallback(target_word)
+            return self._fallback_response(target_word)
 
-    def _generate_with_groq(self, user_message, target_word, conversation_history):
-        """Generate response using Groq AI"""
+    def _generate_with_llama(self, user_message, target_word, conversation_history):
+        """
+        Llama 3 ile yanıt üret
+        Kelime SABİT ama etrafındaki cümleler AI tarafından üretilir
+        """
 
-        # Build messages
-        messages = [
-            {
-                "role": "system",
-                "content": f"""You are a friendly, conversational AI assistant.
+        # System prompt - Türkçe ve doğal konuşma
+        system_prompt = f"""Sen samimi ve yardımsever bir AI asistanısın. Türkçe konuşuyorsun.
 
-CRITICAL RULES:
-1. You MUST naturally include the word "{target_word}" in your response
-2. Keep responses conversational and engaging (2-3 sentences)
-3. Answer the user's question while naturally using the word
-4. Make it feel like a real conversation
-5. Don't mention you're using a specific word
-6. Be helpful and relevant to what the user asked
+KRİTİK KURAL:
+- Yanıtında '{target_word}' kelimesini MUTLAKA kullan
+- Ama kelimeyi DOĞAL ve YARATICI bir şekilde cümleye yerleştir
+- Her seferinde FARKLI bir cümle kur
+- 2-3 cümle ile özet ve samimi ol
+- Kullanıcının sorusuna gerçekten cevap ver
 
-Examples:
-User: "How are you?" → "I'm doing great! Just like a pilot navigating through the day smoothly. How about you?"
-User: "Tell me about technology" → "Technology is giant in its impact on our lives! It's transforming how we work and communicate."
+KÖTÜ ÖRNEKLER (tekrarlı, yapay):
+❌ "İyi soru! '{target_word}' önemli bir kavram."
+❌ "'{target_word}' hakkında konuşalım."
 
-Now respond to the user naturally while including the word "{target_word}"."""
-            }
-        ]
+İYİ ÖRNEKLER (doğal, yaratıcı):
+✅ Kelime: pilot → "Harika gidiyorum! Sanki bir pilot gibi rahat ve kontrollü hissediyorum. Sen nasılsın?"
+✅ Kelime: giant → "AI kesinlikle giant bir etki yaratıyor dünyada! Her gün yeni gelişmeler oluyor."
+✅ Kelime: enable → "Teknoloji insanlara inanılmaz şeyler yapma imkanı enable ediyor. Örneğin AI gibi!"
+✅ Kelime: syrup → "Kahvaltıda syrup seviyorum aslında, tatlı bir başlangıç güne. Sen ne seversin?"
+✅ Kelime: hero → "Her insan kendi hayatının hero'su olabilir. Küçük adımlar bile önemli!"
 
-        # Add conversation history (last 3 exchanges)
+Şimdi kullanıcıya cevap ver ve '{target_word}' kelimesini YARATICI şekilde kullan:"""
+
+        # Conversation history ekle
+        conversation_context = ""
         if conversation_history:
-            import json
             try:
                 history = json.loads(conversation_history) if isinstance(conversation_history, str) else conversation_history
-                for msg in history[-6:]:  # Last 3 exchanges (6 messages)
-                    messages.append({
-                        "role": "user" if msg.get('type') == 'user' else "assistant",
-                        "content": msg.get('content', '')
-                    })
+                recent = history[-4:] if len(history) > 4 else history
+
+                if recent:
+                    conversation_context = "\n\nÖnceki konuşma:\n"
+                    for msg in recent:
+                        role = "Kullanıcı" if msg.get('type') == 'user' else "Sen"
+                        conversation_context += f"{role}: {msg.get('content', '')}\n"
             except:
                 pass
 
-        # Add current user message
-        messages.append({
-            "role": "user",
-            "content": user_message
-        })
+        # Tam prompt
+        full_prompt = f"""{system_prompt}
 
-        # Call Groq API
-        response = self.client.chat.completions.create(
-            model="llama-3.1-8b-instant",  # Updated model (llama3-8b-8192 deprecated May 2025)
-            messages=messages,
-            temperature=0.8,
-            max_tokens=150,
-            top_p=0.9
+{conversation_context}
+
+Kullanıcı: {user_message}
+
+Sen ('{target_word}' kelimesini doğal şekilde kullanarak):"""
+
+        # Ollama API çağrısı
+        response = requests.post(
+            f"{self.ollama_url}/api/generate",
+            json={
+                "model": self.model,
+                "prompt": full_prompt,
+                "stream": False,
+                "options": {
+                    "temperature": 0.9,  # Yaratıcılık için yüksek
+                    "top_p": 0.95,
+                    "top_k": 50,
+                    "num_predict": 200,
+                    "stop": ["\n\nKullanıcı:", "\nKullanıcı:"]
+                }
+            },
+            timeout=30
         )
 
-        bot_response = response.choices[0].message.content
+        if response.status_code == 200:
+            bot_response = response.json()['response'].strip()
 
-        # Verify word is included (case-insensitive)
-        if target_word.lower() not in bot_response.lower():
-            # Add word naturally if missing
-            bot_response += f" Speaking of which, {target_word} is quite relevant here!"
+            # Gereksiz ekleri temizle
+            if bot_response.startswith("Sen:"):
+                bot_response = bot_response[4:].strip()
 
-        return bot_response
+            # Kelime kontrolü - yoksa ekle (son çare)
+            if target_word.lower() not in bot_response.lower():
+                bot_response += f" Bu arada, '{target_word}' kelimesi ilginç değil mi?"
 
-    def _generate_fallback(self, target_word):
-        """Fallback response if AI not available"""
+            return bot_response
+        else:
+            raise Exception(f"Ollama API error: {response.status_code}")
+
+    def _fallback_response(self, target_word):
+        """Ollama yoksa basit yanıt"""
         import random
 
-        responses = [
-            f"Great question! Let me tell you something about '{target_word}' - it's an important concept.",
-            f"Interesting! The word '{target_word}' reminds me of something fascinating.",
-            f"I love discussing this! '{target_word}' plays a key role in many areas.",
-            f"That's a good point! Speaking of which, '{target_word}' is quite relevant here.",
-            f"Thanks for asking! The concept of '{target_word}' is worth exploring."
+        templates = [
+            f"Harika soru! '{target_word}' gerçekten ilginç bir konu.",
+            f"Bunu merak etmen güzel! '{target_word}' hakkında düşünelim.",
+            f"İyi nokta! '{target_word}' ile ilgili çok şey söylenebilir.",
+            f"Anlıyorum! '{target_word}' önemli bir kavram aslında.",
+            f"Teşekkürler! '{target_word}' gerçekten keşfetmeye değer."
         ]
 
-        return random.choice(responses)
+        return random.choice(templates)
 
-# Global chatbot instance
+# Global instance
 chatbot = AdvancedChatbot()

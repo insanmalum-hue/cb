@@ -23,14 +23,17 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
 # ============================================================================
-# GROQ AI INTEGRATION
+# CHATBOT INTEGRATION (Ollama Llama 3)
 # ============================================================================
 
+from chatbot import chatbot  # Import from chatbot.py
+
+# Groq kept for backward compatibility but not used anymore
 try:
     from groq import Groq
     GROQ_AVAILABLE = True
     groq_client = Groq(api_key=os.getenv('GROQ_API_KEY'))
-    print("✓ Groq API initialized")
+    print("✓ Groq API initialized (backup)")
 except Exception as e:
     GROQ_AVAILABLE = False
     print(f"⚠ Groq not available: {e}")
@@ -52,110 +55,6 @@ class UserSession(db.Model):
     completed = db.Column(db.Boolean, default=False)
     # NEW: Store conversation history
     conversation_history = db.Column(db.Text, default='[]')
-
-# ============================================================================
-# CHATBOT WITH GROQ AI
-# ============================================================================
-
-class SmartChatbot:
-    def __init__(self):
-        self.words = [
-            "pilot", "giant", "enable", "syrup", "medal", "hero", "iron", "soap",
-            "visual", "vendor", "genuine", "punch", "grid", "floor", "glide", "penalty",
-            "blossom", "crew", "pival", "sheriff", "solar", "claw", "oak", "find",
-            "bind", "pet", "urban", "else", "series", "wave", "pumpkin", "amount",
-            "verb", "similar", "crime", "bird"
-        ]
-
-    def get_target_word(self, message_count):
-        """Get the word that should be used in this message"""
-        if message_count >= 36:
-            return None
-        return self.words[message_count]
-
-    def generate_response_with_groq(self, user_message, target_word, message_count, conversation_history):
-        """Generate response using Groq AI"""
-
-        if not GROQ_AVAILABLE:
-            return self.generate_fallback_response(target_word, message_count)
-
-        try:
-            # Build conversation context
-            messages = [
-                {
-                    "role": "system",
-                    "content": f"""You are a friendly chatbot in a crypto challenge.
-
-CRITICAL RULES:
-1. You MUST naturally include the word "{target_word}" in your response
-2. Make the conversation feel natural and engaging
-3. Keep responses conversational (2-3 sentences)
-4. Don't mention you're using a specific word
-5. Current message: {message_count + 1}/36
-6. Be helpful and answer the user's question while including the word
-
-Example good responses:
-- User: "How are you?" → "I'm doing great! Did you know that a pilot needs excellent focus? How's your day?"
-- User: "Tell me about AI" → "AI is like a giant network of connections! It learns from data patterns."
-
-NEVER say "show code" or mention completing sequences."""
-                }
-            ]
-
-            # Add conversation history (last 3 messages for context)
-            import json
-            try:
-                history = json.loads(conversation_history) if conversation_history else []
-                for msg in history[-6:]:  # Last 3 exchanges
-                    messages.append({
-                        "role": "user" if msg['type'] == 'user' else "assistant",
-                        "content": msg['content']
-                    })
-            except:
-                pass
-
-            # Add current user message
-            messages.append({
-                "role": "user",
-                "content": user_message
-            })
-
-            # Call Groq API
-            response = groq_client.chat.completions.create(
-                model="llama-3.1-8b-instant",  # Updated model (llama3-8b-8192 deprecated May 2025)
-                messages=messages,
-                temperature=0.8,
-                max_tokens=150,
-                top_p=0.9
-            )
-
-            bot_response = response.choices[0].message.content
-
-            # Verify word is included
-            if target_word.lower() not in bot_response.lower():
-                # Append word naturally if missing
-                bot_response += f" By the way, {target_word} is an interesting concept!"
-
-            return bot_response
-
-        except Exception as e:
-            print(f"Groq API error: {e}")
-            return self.generate_fallback_response(target_word, message_count)
-
-    def generate_fallback_response(self, target_word, message_count):
-        """Fallback response if AI not available"""
-        responses = [
-            f"Great question! Let me tell you something about '{target_word}' - it's an important concept.",
-            f"Interesting! The word '{target_word}' reminds me of something fascinating.",
-            f"I love discussing this! '{target_word}' plays a key role in many areas.",
-            f"That's a good point! Speaking of which, '{target_word}' is quite relevant here.",
-            f"Thanks for asking! The concept of '{target_word}' is worth exploring."
-        ]
-        import random
-        return random.choice(responses)
-
-# Global chatbot instance
-chatbot = SmartChatbot()
 
 # ============================================================================
 # ROUTES
@@ -239,10 +138,9 @@ def chat():
     except:
         conversation_history = []
 
-    # Generate AI response
-    bot_response = chatbot.generate_response_with_groq(
+    # Generate AI response (using Ollama Llama 3)
+    bot_response = chatbot.generate_response(
         user_message=user_message,
-        target_word=target_word,
         message_count=current_count,
         conversation_history=json.dumps(conversation_history)
     )
