@@ -340,6 +340,106 @@ def get_stats():
         'completed_sequences': completed
     })
 
+@app.route('/admin/api/apikey', methods=['GET'])
+def get_api_key():
+    """Admin: Get current API key (masked)"""
+    api_key = os.getenv('GROQ_API_KEY', '')
+
+    return jsonify({
+        'api_key': api_key if api_key else None
+    })
+
+@app.route('/admin/api/apikey', methods=['POST'])
+def save_api_key():
+    """Admin: Save API key to .env file"""
+    data = request.json
+    new_api_key = data.get('api_key', '').strip()
+
+    if not new_api_key:
+        return jsonify({'error': 'API key cannot be empty'}), 400
+
+    if not new_api_key.startswith('gsk_'):
+        return jsonify({'error': 'Invalid API key format. Should start with gsk_'}), 400
+
+    try:
+        # Read current .env file
+        env_path = os.path.join(os.path.dirname(__file__), '.env')
+
+        if os.path.exists(env_path):
+            with open(env_path, 'r') as f:
+                lines = f.readlines()
+        else:
+            lines = []
+
+        # Update or add GROQ_API_KEY
+        updated = False
+        for i, line in enumerate(lines):
+            if line.startswith('GROQ_API_KEY='):
+                lines[i] = f'GROQ_API_KEY={new_api_key}\n'
+                updated = True
+                break
+
+        if not updated:
+            lines.append(f'GROQ_API_KEY={new_api_key}\n')
+
+        # Write back to .env
+        with open(env_path, 'w') as f:
+            f.writelines(lines)
+
+        # Update environment variable
+        os.environ['GROQ_API_KEY'] = new_api_key
+
+        return jsonify({
+            'success': True,
+            'message': 'API key saved successfully! Please restart the server for changes to take effect.'
+        })
+
+    except Exception as e:
+        return jsonify({'error': f'Failed to save API key: {str(e)}'}), 500
+
+@app.route('/admin/api/apikey/test', methods=['POST'])
+def test_api_key():
+    """Admin: Test API key"""
+    data = request.json
+    test_api_key = data.get('api_key', '').strip()
+
+    if not test_api_key:
+        return jsonify({'error': 'API key cannot be empty'}), 400
+
+    try:
+        from groq import Groq
+
+        # Create client with test key
+        client = Groq(api_key=test_api_key)
+
+        # Make a simple API call
+        response = client.chat.completions.create(
+            model="llama-3.1-8b-instant",
+            messages=[
+                {"role": "user", "content": "Say 'OK'"}
+            ],
+            max_tokens=10,
+            temperature=0.5
+        )
+
+        result = response.choices[0].message.content
+
+        return jsonify({
+            'success': True,
+            'message': f'✅ API Key is working! Model: llama-3.1-8b-instant | Response: {result}'
+        })
+
+    except Exception as e:
+        error_msg = str(e)
+        if 'Access denied' in error_msg or '403' in error_msg:
+            return jsonify({
+                'error': '❌ Access Denied (403): This API key does not have permission. Please check your Groq account role and regenerate the key.'
+            }), 400
+        else:
+            return jsonify({
+                'error': f'❌ API Test Failed: {error_msg}'
+            }), 400
+
 # ============================================================================
 # INITIALIZE
 # ============================================================================

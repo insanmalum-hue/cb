@@ -508,6 +508,47 @@
             </div>
         </div>
 
+        <!-- API Key Management Section -->
+        <div class="editor-section" style="margin-bottom: 30px;">
+            <div class="editor-header">
+                <div>
+                    <h2 data-i18n="apikey_title">🔑 Groq API Key Configuration</h2>
+                    <p class="editor-description" data-i18n="apikey_description">
+                        Enter your Groq API key below. The key will be saved to .env file and used for AI responses.
+                    </p>
+                </div>
+            </div>
+
+            <div style="margin: 20px 0;">
+                <label style="display: block; margin-bottom: 8px; color: var(--text-primary); font-weight: 600;" data-i18n="apikey_label">Groq API Key:</label>
+                <input
+                    type="text"
+                    id="apiKeyInput"
+                    data-i18n-placeholder="apikey_placeholder"
+                    placeholder="gsk_..."
+                    style="width: 100%; padding: 12px; border: 2px solid var(--border-color); border-radius: 8px; font-family: monospace; font-size: 14px; background: var(--editor-bg); color: var(--text-primary); outline: none; transition: all 0.3s ease;"
+                />
+                <div style="margin-top: 8px; font-size: 13px; color: var(--text-hint);">
+                    <span data-i18n="apikey_current">Current Key:</span> <code id="currentApiKey" style="background: var(--editor-bg); padding: 4px 8px; border-radius: 4px; color: var(--text-primary);">Loading...</code>
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button class="btn-save" onclick="saveApiKey()"><span data-i18n="btn_save_api">💾 Save API Key</span></button>
+                <button class="btn-save" onclick="testApiKey()" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);"><span data-i18n="btn_test_api">🧪 Test API Key</span></button>
+            </div>
+
+            <!-- API Test Result -->
+            <div class="alert alert-success" id="apiSuccessAlert" style="margin-top: 15px;">
+                <span class="alert-icon">✓</span>
+                <span id="apiSuccessMessage" data-i18n="api_test_success">API Key is working! Model: llama-3.1-8b-instant</span>
+            </div>
+            <div class="alert alert-error" id="apiErrorAlert" style="margin-top: 15px;">
+                <span class="alert-icon">✗</span>
+                <span id="apiErrorMessage">API test failed.</span>
+            </div>
+        </div>
+
         <!-- Code Editor Section -->
         <div class="editor-section">
             <div class="editor-header">
@@ -551,6 +592,15 @@
                 stat_total_sessions: 'Total Sessions',
                 stat_active_sessions: 'Active Sessions',
                 stat_completed: 'Completed Sequences',
+                apikey_title: '🔑 Groq API Key Configuration',
+                apikey_description: 'Enter your Groq API key below. The key will be saved to .env file and used for AI responses.',
+                apikey_label: 'Groq API Key:',
+                apikey_placeholder: 'Enter your Groq API key (gsk_...)',
+                apikey_current: 'Current Key:',
+                btn_save_api: '💾 Save API Key',
+                btn_test_api: '🧪 Test API Key',
+                api_test_success: 'API Key is working! Model: llama-3.1-8b-instant',
+                api_save_success: 'API Key saved successfully!',
                 editor_title: 'Python Code Configuration',
                 editor_description: 'This Python code will be displayed to users after they complete all 36 messages. You can edit it below and save your changes.',
                 last_updated: 'Last updated:',
@@ -570,6 +620,15 @@
                 stat_total_sessions: 'Toplam Oturum',
                 stat_active_sessions: 'Aktif Oturum',
                 stat_completed: 'Tamamlanan Sıralama',
+                apikey_title: '🔑 Groq API Key Yapılandırması',
+                apikey_description: 'Groq API anahtarınızı aşağıya girin. Anahtar .env dosyasına kaydedilecek ve AI yanıtları için kullanılacak.',
+                apikey_label: 'Groq API Anahtarı:',
+                apikey_placeholder: 'Groq API anahtarınızı girin (gsk_...)',
+                apikey_current: 'Mevcut Anahtar:',
+                btn_save_api: '💾 API Anahtarını Kaydet',
+                btn_test_api: '🧪 API Anahtarını Test Et',
+                api_test_success: 'API Anahtarı çalışıyor! Model: llama-3.1-8b-instant',
+                api_save_success: 'API Anahtarı başarıyla kaydedildi!',
                 editor_title: 'Python Kodu Yapılandırması',
                 editor_description: 'Bu Python kodu, kullanıcılar 36 mesajı tamamladıktan sonra gösterilecektir. Aşağıdan düzenleyebilir ve değişikliklerinizi kaydedebilirsiniz.',
                 last_updated: 'Son güncelleme:',
@@ -792,6 +851,114 @@
         function hideAlerts() {
             document.getElementById('successAlert').classList.remove('show');
             document.getElementById('errorAlert').classList.remove('show');
+            document.getElementById('apiSuccessAlert').classList.remove('show');
+            document.getElementById('apiErrorAlert').classList.remove('show');
+        }
+
+        // Load current API key
+        async function loadApiKey() {
+            try {
+                const response = await fetch('/admin/api/apikey');
+                const data = await response.json();
+
+                if (data.api_key) {
+                    // Show only last 4 characters
+                    const masked = '***...' + data.api_key.slice(-4);
+                    document.getElementById('currentApiKey').textContent = masked;
+                } else {
+                    document.getElementById('currentApiKey').textContent = 'Not configured';
+                }
+            } catch (error) {
+                console.error('Error loading API key:', error);
+                document.getElementById('currentApiKey').textContent = 'Error loading';
+            }
+        }
+
+        // Save API key
+        async function saveApiKey() {
+            const apiKey = document.getElementById('apiKeyInput').value.trim();
+
+            if (!apiKey) {
+                showApiError('API key cannot be empty');
+                return;
+            }
+
+            if (!apiKey.startsWith('gsk_')) {
+                showApiError('Invalid API key format. Should start with gsk_');
+                return;
+            }
+
+            try {
+                const response = await fetch('/admin/api/apikey', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ api_key: apiKey })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    document.getElementById('apiKeyInput').value = '';
+                    loadApiKey();
+                    showApiSuccess(translations[currentLang].api_save_success);
+                } else {
+                    showApiError(data.error || 'Failed to save API key');
+                }
+            } catch (error) {
+                console.error('Error saving API key:', error);
+                showApiError('Failed to save API key');
+            }
+        }
+
+        // Test API key
+        async function testApiKey() {
+            const apiKey = document.getElementById('apiKeyInput').value.trim();
+
+            if (!apiKey) {
+                showApiError('Please enter an API key first');
+                return;
+            }
+
+            try {
+                const response = await fetch('/admin/api/apikey/test', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ api_key: apiKey })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showApiSuccess(data.message || translations[currentLang].api_test_success);
+                } else {
+                    showApiError(data.error || 'API test failed');
+                }
+            } catch (error) {
+                console.error('Error testing API key:', error);
+                showApiError('Failed to test API key');
+            }
+        }
+
+        // Show API success alert
+        function showApiSuccess(message) {
+            hideAlerts();
+            document.getElementById('apiSuccessMessage').textContent = message;
+            const alert = document.getElementById('apiSuccessAlert');
+            alert.classList.add('show');
+            setTimeout(() => alert.classList.remove('show'), 5000);
+        }
+
+        // Show API error alert
+        function showApiError(message) {
+            hideAlerts();
+            document.getElementById('apiErrorMessage').textContent = message;
+            const alert = document.getElementById('apiErrorAlert');
+            alert.classList.add('show');
+            setTimeout(() => alert.classList.remove('show'), 5000);
         }
 
         // Initialize on page load
@@ -823,9 +990,10 @@
             // Theme toggle button
             document.getElementById('themeToggle').addEventListener('click', toggleTheme);
 
-            // Load code and stats
+            // Load code, stats, and API key
             loadCode();
             loadStats();
+            loadApiKey();
 
             // Refresh stats every 15 seconds
             setInterval(loadStats, 15000);
